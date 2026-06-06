@@ -35,16 +35,48 @@ export default function HeroSection() {
     const t = setTimeout(() => setVisible(true), 80);
     // 2 – client-only random delays for the glitch entrance
     setWordDelays(TITLE_WORDS.map(() => Math.random() * 0.06));
-    // 3 – WebGPU: only import R3F module if a real GPU adapter exists.
-    //     This ensures hero-futuristic.tsx (which contains R3F v8 imports
-    //     incompatible with React 19) is NEVER loaded on machines without
-    //     a working WebGPU adapter.
+    // 3 – WebGPU: only import R3F module if a REAL, working GPU device
+    //     can be created. Chrome exposes a WebGPU adapter even on
+    //     sandboxed GPUs, but the device dies immediately — causing a
+    //     "WebGPU Device Lost" error. We test device viability here
+    //     before touching R3F / Three.js at all.
     (async () => {
       try {
         const nav = navigator as any;
         if (!nav?.gpu) return;
         const adapter = await nav.gpu.requestAdapter();
         if (!adapter) return;
+
+        // Probe: create a device and submit REAL GPU commands.
+        // An idle device survives on broken drivers — actual command
+        // submission triggers the D3D12 / DXGI crash. We:
+        //   1. Create the device
+        //   2. Submit a trivial compute pass
+        //   3. Wait for onSubmittedWorkDone (confirms GPU processed it)
+        //   4. Race device.lost against a generous timeout
+        // If any step fails the GPU is unusable — bail out.
+        const device = await adapter.requestDevice();
+
+        // Step 1 — submit real GPU work to stress the driver
+        try {
+          const encoder = device.createCommandEncoder();
+          const pass = encoder.beginComputePass();
+          pass.end();
+          device.queue.submit([encoder.finish()]);
+          await device.queue.onSubmittedWorkDone();
+        } catch {
+          device.destroy();
+          return; // GPU can't run even a trivial command
+        }
+
+        // Step 2 — wait longer to catch deferred D3D12 device-lost
+        const isLost = await Promise.race([
+          device.lost.then(() => true as const),
+          new Promise<false>((r) => setTimeout(() => r(false), 1200)),
+        ]);
+        device.destroy();
+        if (isLost) return; // GPU died after work submission — skip R3F
+
         const mod = await import('./hero-futuristic');
         setWebGPUOverlay(() => mod.default);
       } catch { /* GPU / R3F not available */ }

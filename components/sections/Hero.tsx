@@ -233,7 +233,7 @@ export default function Hero() {
       <button
         onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
         aria-label="Scroll to About section"
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-white transition-colors"
+        className="absolute bottom-10 center -translate-x-1/2 text-slate-500 hover:text-white transition-colors"
         style={{ animation: 'float 2.5s ease-in-out infinite' }}
       >
         <ArrowDown size={20} aria-hidden="true" />

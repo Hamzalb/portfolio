@@ -69,13 +69,15 @@
 
 html {
   scroll-behavior: smooth;
-  /* Prevent layout shift from scrollbar */
-  scrollbar-gutter: stable;
 }
 
-/* Hide default cursor only on hover-capable (mouse) devices */
+/* Desktop: reserve space for classic scrollbar to prevent layout shift.
+   Mobile browsers use overlay scrollbars — gutter wastes space there. */
 @media (hover:hover) and (pointer:fine) {
-  html { cursor: none; }
+  html {
+    cursor: none;
+    scrollbar-gutter: stable;
+  }
 }
 
 body {
@@ -249,8 +251,10 @@ body::before {
 .explore-btn {
   position:absolute;
   bottom:clamp(1.5rem,4vw,2.5rem);
-  left:50%;
-  transform:translateX(-50%);
+  left:0;
+  right:0;
+  width:fit-content;
+  margin-inline:auto;
   z-index:20;
   display:inline-flex;
   align-items:center;
