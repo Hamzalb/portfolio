@@ -2,7 +2,11 @@
 import { useEffect, useRef } from 'react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Briefcase, GraduationCap } from 'lucide-react';
 
+/* ─────────────────────────────────────────────────────────────
+   DATA
+───────────────────────────────────────────────────────────── */
 interface ExperienceEntry {
   role: string;
   company: string;
@@ -61,79 +65,91 @@ const EXPERIENCES: ExperienceEntry[] = [
   },
 ];
 
+/* ─────────────────────────────────────────────────────────────
+   TIMELINE CARD
+───────────────────────────────────────────────────────────── */
 function TimelineCard({ entry, index }: { entry: ExperienceEntry; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
-  const isLeft = index % 2 === 0;
+  const isWork = entry.type === 'work';
+  const Icon = isWork ? Briefcase : GraduationCap;
 
   useEffect(() => {
     const el = ref.current;
     if (!el || reduced) return;
     el.style.opacity = '0';
-    el.style.transform = `translateX(${isLeft ? '-24px' : '24px'})`;
-    el.style.transition = `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s`;
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = `opacity 0.65s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s, transform 0.65s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s`;
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
         el.style.opacity = '1';
-        el.style.transform = 'translateX(0)';
+        el.style.transform = 'translateY(0)';
         obs.disconnect();
       }
-    }, { threshold: 0.2 });
+    }, { threshold: 0.15 });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [isLeft, index, reduced]);
+  }, [index, reduced]);
 
   return (
-    <div
-      className={`relative flex items-start gap-8 ${
-        isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
-      } flex-row`}
-    >
-      {/* Card */}
+    <div className="exp-timeline-item" role="listitem">
+      {/* Timeline node — icon inside circle */}
       <div
-        ref={ref}
-        className="glass-card p-4 sm:p-6 md:w-[calc(50%-2.5rem)] w-full ml-9 md:ml-0"
-        aria-label={`${entry.role} at ${entry.company}`}
+        className="exp-node"
+        style={{
+          borderColor: isWork ? 'rgba(99,102,241,0.5)' : 'rgba(6,182,212,0.5)',
+          boxShadow: isWork
+            ? '0 0 12px rgba(99,102,241,0.3), 0 0 0 4px rgba(99,102,241,0.08)'
+            : '0 0 12px rgba(6,182,212,0.3), 0 0 0 4px rgba(6,182,212,0.08)',
+        }}
+        aria-hidden="true"
       >
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-1">
-          <div>
-            <h3 className="font-semibold text-white text-sm sm:text-base">{entry.role}</h3>
-            <p className="text-indigo-400 text-xs sm:text-sm font-medium">{entry.company}</p>
+        <Icon size={14} strokeWidth={2} style={{ color: isWork ? '#818cf8' : '#22d3ee' }} />
+      </div>
+
+      {/* Card */}
+      <div ref={ref} className="exp-card" aria-label={`${entry.role} at ${entry.company}`}>
+        {/* Header row */}
+        <div className="exp-card-header">
+          <div className="exp-card-titles">
+            <h3 className="exp-role">{entry.role}</h3>
+            <p className="exp-company" style={{ color: isWork ? '#818cf8' : '#22d3ee' }}>
+              {entry.company}
+            </p>
           </div>
           <span
-            className="self-start sm:shrink-0 text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap"
-            style={
-              entry.type === 'work'
-                ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8' }
-                : { background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', color: '#22d3ee' }
-            }
+            className="exp-period"
+            style={{
+              color: isWork ? '#818cf8' : '#22d3ee',
+              background: isWork ? 'rgba(99,102,241,0.08)' : 'rgba(6,182,212,0.08)',
+              borderColor: isWork ? 'rgba(99,102,241,0.18)' : 'rgba(6,182,212,0.18)',
+            }}
           >
             {entry.period}
           </span>
         </div>
-        <ul className="mt-4 space-y-2" role="list">
+
+        {/* Achievements */}
+        <ul className="exp-achievements" role="list">
           {entry.achievements.map((ach, i) => (
-            <li key={i} className="flex gap-2 text-sm text-slate-400 leading-relaxed">
-              <span className="text-indigo-400 shrink-0 mt-0.5" aria-hidden="true">▸</span>
+            <li key={i} className="exp-ach-item">
+              <span
+                className="exp-ach-dot"
+                style={{ background: isWork ? '#6366f1' : '#06b6d4' }}
+                aria-hidden="true"
+              />
               {ach}
             </li>
           ))}
         </ul>
       </div>
-
-      {/* Center dot — aligned to timeline-line (left:20px on mobile → dot centre at 20px) */}
-      <div
-        className="absolute left-[12px] md:left-1/2 md:-translate-x-1/2 top-6 w-4 h-4 rounded-full border-2 border-indigo-500 shrink-0"
-        style={{ background: '#0a0a0f', zIndex: 2 }}
-        aria-hidden="true"
-      />
-
-      {/* Spacer for alternating layout */}
-      <div className="hidden md:block md:w-[calc(50%-2.5rem)]" />
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────────────────────
+   EXPERIENCE SECTION
+───────────────────────────────────────────────────────────── */
 export default function Experience() {
   const sectionRef = useScrollReveal<HTMLElement>();
   const lineRef = useRef<HTMLDivElement>(null);
@@ -153,36 +169,239 @@ export default function Experience() {
   }, [reduced]);
 
   return (
-    <section id="experience" ref={sectionRef} className="relative section-pad" aria-labelledby="experience-heading">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-16">
-          <p className="text-sm font-mono text-indigo-400 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>04. my journey</p>
-          <h2 id="experience-heading" className="section-heading text-3xl md:text-4xl font-bold text-white">
-            Experience
-          </h2>
-        </div>
+    <>
+      <style>{`
+        /* ── Section header ─────────────────────────────── */
+        .exp-label {
+          font-size: 0.8125rem;
+          font-family: var(--font-mono);
+          color: #818cf8;
+          margin-bottom: 0.5rem;
+        }
+        .exp-title {
+          font-size: clamp(1.75rem, 5vw, 2.5rem);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.025em;
+          line-height: 1.15;
+        }
+        .exp-title span {
+          background: linear-gradient(135deg, #6366f1, #06b6d4);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
 
-        {/* Timeline */}
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="timeline-line">
-            <div
-              ref={lineRef}
-              className="timeline-line-fill"
-              style={{ height: '100%' }}
-              aria-hidden="true"
-            />
+        /* ── Timeline container ─────────────────────────── */
+        .exp-timeline {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          gap: clamp(2rem, 4vw, 3rem);
+        }
+
+        /* Vertical line */
+        .exp-line {
+          position: absolute;
+          left: 19px;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        @media (min-width: 768px) {
+          .exp-line {
+            left: 50%;
+            transform: translateX(-50%);
+          }
+        }
+        .exp-line-fill {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(180deg, #6366f1, #06b6d4);
+          transform-origin: top;
+          transform: scaleY(0);
+          transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: transform;
+        }
+
+        /* ── Timeline item ──────────────────────────────── */
+        .exp-timeline-item {
+          position: relative;
+          display: flex;
+          align-items: flex-start;
+          gap: 1.25rem;
+          padding-left: 3rem;
+        }
+        @media (min-width: 768px) {
+          .exp-timeline-item {
+            padding-left: 0;
+            justify-content: center;
+          }
+          .exp-timeline-item:nth-child(odd) {
+            flex-direction: row-reverse;
+          }
+        }
+
+        /* ── Node (icon circle) ─────────────────────────── */
+        .exp-node {
+          position: absolute;
+          left: 8px;
+          top: 1.25rem;
+          width: 2.25rem;
+          height: 2.25rem;
+          border-radius: 50%;
+          border: 2px solid;
+          background: #0a0a0f;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 3;
+          flex-shrink: 0;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .exp-timeline-item:hover .exp-node {
+          transform: scale(1.15);
+        }
+        @media (min-width: 768px) {
+          .exp-node {
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          .exp-timeline-item:hover .exp-node {
+            transform: translateX(-50%) scale(1.15);
+          }
+        }
+
+        /* ── Card ────────────────────────────────────────── */
+        .exp-card {
+          width: 100%;
+          padding: 1.25rem;
+          border-radius: 1rem;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                      border-color 0.3s ease,
+                      box-shadow 0.3s ease;
+          will-change: transform;
+        }
+        .exp-card:hover {
+          transform: translateY(-3px);
+          border-color: rgba(99, 102, 241, 0.18);
+          box-shadow: 0 16px 48px rgba(99, 102, 241, 0.1),
+                      0 0 0 1px rgba(99, 102, 241, 0.08);
+        }
+        @media (hover: none) {
+          .exp-card:hover { transform: none; box-shadow: none; }
+          .exp-card:active {
+            border-color: rgba(99, 102, 241, 0.2);
+            transition-duration: 0.1s;
+          }
+        }
+        @media (min-width: 768px) {
+          .exp-card {
+            width: calc(50% - 2.75rem);
+          }
+        }
+
+        /* ── Card header ────────────────────────────────── */
+        .exp-card-header {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        @media (min-width: 480px) {
+          .exp-card-header {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+          }
+        }
+        .exp-card-titles {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+          min-width: 0;
+        }
+        .exp-role {
+          font-size: 0.9375rem;
+          font-weight: 700;
+          color: #f1f5f9;
+          line-height: 1.35;
+          letter-spacing: -0.01em;
+        }
+        .exp-company {
+          font-size: 0.8125rem;
+          font-weight: 600;
+        }
+        .exp-period {
+          flex-shrink: 0;
+          align-self: flex-start;
+          padding: 0.25rem 0.625rem;
+          border-radius: 9999px;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          font-family: var(--font-mono);
+          border: 1px solid;
+          white-space: nowrap;
+        }
+
+        /* ── Achievements ───────────────────────────────── */
+        .exp-achievements {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .exp-ach-item {
+          display: flex;
+          align-items: baseline;
+          gap: 0.625rem;
+          font-size: 0.8125rem;
+          color: #94a3b8;
+          line-height: 1.6;
+        }
+        .exp-ach-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          margin-top: 0.45rem;
+        }
+      `}</style>
+
+      <section
+        id="experience"
+        ref={sectionRef}
+        className="relative section-pad"
+        aria-labelledby="experience-heading"
+      >
+        <div className="max-w-5xl mx-auto">
+          {/* ── Header ────────────────────────────────────── */}
+          <div style={{ marginBottom: 'clamp(2rem, 4vw, 3.5rem)' }}>
+            <p className="exp-label">04. my journey</p>
+            <h2 id="experience-heading" className="exp-title">
+              Experience & <span>Education</span>
+            </h2>
           </div>
 
-          <div className="flex flex-col gap-12" role="list" aria-label="Experience timeline">
+          {/* ── Timeline ──────────────────────────────────── */}
+          <div className="exp-timeline" role="list" aria-label="Experience timeline">
+            {/* Vertical line */}
+            <div className="exp-line" aria-hidden="true">
+              <div ref={lineRef} className="exp-line-fill" />
+            </div>
+
             {EXPERIENCES.map((entry, i) => (
-              <div key={i} role="listitem">
-                <TimelineCard entry={entry} index={i} />
-              </div>
+              <TimelineCard key={i} entry={entry} index={i} />
             ))}
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

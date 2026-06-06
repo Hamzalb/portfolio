@@ -16,7 +16,16 @@ import type { Project, Skill } from '@/types';
 // module evaluation crash on machines without WebGPU.
 const HeroSection = dynamic(
   () => import('@/components/ui/HeroSection'),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    loading: () => (
+      <section
+        className="relative min-h-svh"
+        style={{ background: '#0a0a0f' }}
+        aria-hidden="true"
+      />
+    ),
+  },
 );
 
 // Whobee — small fixed mascot in the bottom-right corner; persists across scroll.
@@ -55,7 +64,30 @@ export default function Home() {
       </a>
 
       {/* ── Hero — Canvas 2D bg + optional WebGPU overlay ────────── */}
-      <HeroSection />
+      <ErrorBoundary
+        fallback={
+          <section
+            className="relative min-h-svh flex items-center justify-center"
+            style={{ background: '#0a0a0f' }}
+          >
+            <h1
+              className="font-bold tracking-tight text-white text-center"
+              style={{ fontSize: 'clamp(2.4rem, 9vw, 7rem)' }}
+            >
+              Hamza{' '}
+              <span style={{
+                background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
+                Loubani
+              </span>
+            </h1>
+          </section>
+        }
+      >
+        <HeroSection />
+      </ErrorBoundary>
 
       <ErrorBoundary>
         <About />
