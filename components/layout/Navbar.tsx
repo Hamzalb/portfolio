@@ -98,9 +98,9 @@ export default function Navbar() {
           gap: 0.2rem;
           padding: 0.35rem 0.35rem 0.35rem 0.45rem;
           border-radius: 9999px;
-          width: 70%;
+          width: 55%;
           min-width: fit-content;
-          max-width: calc(70% - 1rem);
+          max-width: calc(55% - 1rem);
           flex-wrap: nowrap;
           transition: background 0.35s ease,
                       border-color 0.35s ease,
@@ -290,7 +290,7 @@ export default function Navbar() {
         <ul
           ref={navListRef}
           role="list"
-          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '1px', flex: 1, justifyContent: 'center' }}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'space-evenly' }}
         >
           {/* Sliding pill background */}
           <li aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
