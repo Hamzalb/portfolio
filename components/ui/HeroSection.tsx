@@ -12,7 +12,7 @@
  * from being evaluated on machines without WebGPU.
  */
 
-import { useState, useEffect, type ComponentType } from 'react';
+import { useState, useEffect } from 'react';
 import { Github, Linkedin, Mail, ArrowUpRight, Download, ChevronDown } from 'lucide-react';
 import HeroScene from '../three/HeroScene';
 
@@ -22,7 +22,6 @@ export default function HeroSection() {
   const SUBTITLE    = 'Full-Stack Developer & Software Engineer';
 
   // ── state ──────────────────────────────────────────────────────────────────
-  const [WebGPUOverlay, setWebGPUOverlay] = useState<ComponentType | null>(null);
   const [visible,      setVisible]      = useState(false);
   const [wordCount,    setWordCount]    = useState(0);
   const [subVisible,   setSubVisible]   = useState(false);
@@ -34,36 +33,6 @@ export default function HeroSection() {
     const t = setTimeout(() => setVisible(true), 80);
     setWordDelays([TITLE_FIRST, TITLE_LAST].map(() => Math.random() * 0.06));
 
-    (async () => {
-      try {
-        const nav = navigator as any;
-        if (!nav?.gpu) return;
-        const adapter = await nav.gpu.requestAdapter();
-        if (!adapter) return;
-
-        // Probe: create a device and submit REAL GPU commands.
-        const device = await adapter.requestDevice();
-        try {
-          const encoder = device.createCommandEncoder();
-          const pass = encoder.beginComputePass();
-          pass.end();
-          device.queue.submit([encoder.finish()]);
-          await device.queue.onSubmittedWorkDone();
-        } catch {
-          device.destroy();
-          return;
-        }
-        const isLost = await Promise.race([
-          device.lost.then(() => true as const),
-          new Promise<false>((r) => setTimeout(() => r(false), 1200)),
-        ]);
-        device.destroy();
-        if (isLost) return;
-
-        const mod = await import('./hero-futuristic');
-        setWebGPUOverlay(() => mod.default);
-      } catch { /* GPU / R3F not available */ }
-    })();
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -356,7 +325,6 @@ export default function HeroSection() {
       <section className="hero-section" id="hero" aria-label="Hero">
         {/* ── Background layers ─────────────────────────────── */}
         <HeroScene />
-        {WebGPUOverlay && <WebGPUOverlay />}
 
         {/* ── Content ───────────────────────────────────────── */}
         <div className="hero-content">
