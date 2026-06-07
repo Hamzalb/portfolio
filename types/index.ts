@@ -8,6 +8,7 @@ export interface Project {
   featured: boolean;
   category: 'Frontend' | 'Full-Stack' | 'API' | 'Other';
   coverGradient: string;
+  previewUrl?: string;
   order: number;
 }
 

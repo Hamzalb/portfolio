@@ -62,32 +62,76 @@ const FALLBACK_PROJECTS: Project[] = [
     coverGradient: 'linear-gradient(135deg,#334155 0%,#1e293b 50%,#0f172a 100%)',
     order: 6,
   },
+  {
+    _id: '7', title: 'Yalla Nbadel – Bartering Marketplace', featured: true, category: 'Full-Stack',
+    description: 'A peer-to-peer bartering platform where users exchange goods and services without money. Features verified profiles, built-in messaging, and category-based browsing.',
+    techStack: ['Next.js', 'React', 'TypeScript', 'Node.js'],
+    liveUrl: 'https://senior-frontend-murex.vercel.app/', repoUrl: '',
+    coverGradient: 'linear-gradient(135deg,#f59e0b 0%,#ea580c 50%,#dc2626 100%)',
+    previewUrl: 'https://senior-frontend-murex.vercel.app/',
+    order: 7,
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────
    PROJECT CARD
 ───────────────────────────────────────────────────────────── */
 function ProjectCard({ project }: { project: Project }) {
+  const coverRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0.25);
+
+  // Use previewUrl if set, otherwise use liveUrl if it's a real URL
+  const previewSrc = project.previewUrl
+    || (project.liveUrl && project.liveUrl !== '#' ? project.liveUrl : '');
+
+  useEffect(() => {
+    if (!previewSrc || !coverRef.current) return;
+    const update = () => {
+      if (coverRef.current) {
+        setPreviewScale(coverRef.current.offsetWidth / 1440);
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [previewSrc]);
+
   return (
     <article className="proj-card" aria-label={`Project: ${project.title}`}>
-      {/* Cover gradient */}
-      <div className="proj-cover" style={{ background: project.coverGradient }} aria-hidden="true">
-        {/* Abstract monogram */}
-        <span className="proj-cover-mono">
-          {project.title.split('–')[0].trim().slice(0, 2)}
-        </span>
-
-        {/* Featured badge */}
-        {project.featured && (
-          <div className="proj-featured-badge">
-            <Star size={10} fill="currentColor" aria-hidden="true" />
-            Featured
-          </div>
-        )}
-
-        {/* Category pill (overlapping bottom of cover) */}
-        <span className="proj-category-pill">{project.category}</span>
-      </div>
+      {/* Cover — live preview or gradient */}
+      {previewSrc ? (
+        <div ref={coverRef} className="proj-cover proj-cover-preview" aria-hidden="true">
+          <iframe
+            src={previewSrc}
+            className="proj-preview-iframe"
+            style={{ transform: `scale(${previewScale})` }}
+            title={`Preview of ${project.title}`}
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin"
+            tabIndex={-1}
+          />
+          {project.featured && (
+            <div className="proj-featured-badge">
+              <Star size={10} fill="currentColor" aria-hidden="true" />
+              Featured
+            </div>
+          )}
+          <span className="proj-category-pill">{project.category}</span>
+        </div>
+      ) : (
+        <div ref={coverRef} className="proj-cover" style={{ background: project.coverGradient }} aria-hidden="true">
+          <span className="proj-cover-mono">
+            {project.title.split('–')[0].trim().slice(0, 2)}
+          </span>
+          {project.featured && (
+            <div className="proj-featured-badge">
+              <Star size={10} fill="currentColor" aria-hidden="true" />
+              Featured
+            </div>
+          )}
+          <span className="proj-category-pill">{project.category}</span>
+        </div>
+      )}
 
       {/* Body */}
       <div className="proj-body">
@@ -307,6 +351,25 @@ export default function Projects({ projects: propProjects, loading }: { projects
         .proj-card:hover .proj-cover {
           filter: brightness(1.12) saturate(1.1);
         }
+        /* Live preview cover */
+        .proj-cover-preview {
+          background: #0a0a14;
+          pointer-events: none;
+        }
+        .proj-preview-iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 1440px;
+          height: 900px;
+          border: none;
+          pointer-events: none;
+          /* scale factor = cover width / 1440. Since cover = 100% of card,
+             we use a CSS trick: scale to fill via container query fallback */
+          transform-origin: top left;
+          transform: scale(var(--preview-scale, 0.25));
+        }
+
         .proj-cover-mono {
           position: absolute;
           inset: 0;
