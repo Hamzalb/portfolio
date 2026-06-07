@@ -255,25 +255,33 @@ export default function Skills({ skills: propSkills }: { skills?: Skill[] }) {
         .skills-filter-wrap {
           position: relative;
           display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 0.35rem;
-          padding: 0.3rem;
+          flex-wrap: nowrap;
+          gap: 0;
+          padding: 0.25rem;
           border-radius: 9999px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.06);
           align-items: center;
+          width: 100%;
+          max-width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
-        @media (min-width: 768px) {
+        .skills-filter-wrap::-webkit-scrollbar {
+          display: none;
+        }
+        @media (min-width: 640px) {
           .skills-filter-wrap {
-            justify-content: flex-start;
-            flex-wrap: nowrap;
+            width: fit-content;
+            max-width: 100%;
+            overflow-x: visible;
           }
         }
         .skills-filter-pill {
           position: absolute;
           top: 50%;
-          height: calc(100% - 0.4rem);
+          height: calc(100% - 0.35rem);
           transform: translateY(-50%);
           border-radius: 9999px;
           background: rgba(99, 102, 241, 0.12);
@@ -286,8 +294,9 @@ export default function Skills({ skills: propSkills }: { skills?: Skill[] }) {
         .skills-filter-btn {
           position: relative;
           z-index: 1;
-          padding: 0.45rem 0.875rem;
-          font-size: 0.8125rem;
+          flex: 1 0 0;
+          padding: 0.4rem 0.5rem;
+          font-size: 0.6875rem;
           font-weight: 500;
           color: #64748b;
           border-radius: 9999px;
@@ -295,7 +304,21 @@ export default function Skills({ skills: propSkills }: { skills?: Skill[] }) {
           background: transparent;
           cursor: pointer;
           white-space: nowrap;
+          text-align: center;
           transition: color 0.2s;
+        }
+        @media (min-width: 400px) {
+          .skills-filter-btn {
+            padding: 0.45rem 0.625rem;
+            font-size: 0.75rem;
+          }
+        }
+        @media (min-width: 640px) {
+          .skills-filter-btn {
+            flex: 0 0 auto;
+            padding: 0.45rem 0.875rem;
+            font-size: 0.8125rem;
+          }
         }
         .skills-filter-btn:hover {
           color: #cbd5e1;

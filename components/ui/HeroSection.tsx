@@ -172,12 +172,12 @@ export default function HeroSection() {
           color: #fff;
           line-height: 1.05;
           margin-bottom: 0.75rem;
-          font-size: clamp(2.8rem, 10vw, 7.5rem);
+          font-size: clamp(2.4rem, 8vw, 6rem);
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           justify-content: center;
-          gap: clamp(0.4rem, 2.5vw, 1.25rem);
+          gap: clamp(0.3rem, 2vw, 1rem);
         }
         .hero-word {
           display: inline-block;
