@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Briefcase, GraduationCap } from 'lucide-react';
+import { Briefcase, GraduationCap, ChevronRight, MapPin, Calendar } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────
    DATA
@@ -10,7 +10,7 @@ import { Briefcase, GraduationCap } from 'lucide-react';
 interface ExperienceEntry {
   role: string;
   company: string;
-  companyUrl?: string;
+  location?: string;
   period: string;
   type: 'work' | 'education';
   achievements: string[];
@@ -73,72 +73,97 @@ function TimelineCard({ entry, index }: { entry: ExperienceEntry; index: number 
   const reduced = useReducedMotion();
   const isWork = entry.type === 'work';
   const Icon = isWork ? Briefcase : GraduationCap;
+  const accent = isWork ? '#818cf8' : '#22d3ee';
+  const accentRgb = isWork ? '99,102,241' : '6,182,212';
 
   useEffect(() => {
     const el = ref.current;
     if (!el || reduced) return;
+    // Even index (0,2) = left-side cards → slide from left; Odd (1,3) = right-side → slide from right
+    const slideX = index % 2 === 0 ? '-50px' : '50px';
     el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = `opacity 0.65s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s, transform 0.65s cubic-bezier(0.16,1,0.3,1) ${index * 0.12}s`;
+    el.style.transform = `translateX(${slideX})`;
+    el.style.transition = `opacity 0.75s cubic-bezier(0.16,1,0.3,1) ${index * 0.15}s, transform 0.75s cubic-bezier(0.16,1,0.3,1) ${index * 0.15}s`;
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
         el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
+        el.style.transform = 'translateX(0)';
         obs.disconnect();
       }
-    }, { threshold: 0.15 });
+    }, { threshold: 0.12 });
     obs.observe(el);
     return () => obs.disconnect();
   }, [index, reduced]);
 
   return (
     <div className="exp-timeline-item" role="listitem">
-      {/* Timeline node — icon inside circle */}
+      {/* Timeline node */}
       <div
         className="exp-node"
         style={{
-          borderColor: isWork ? 'rgba(99,102,241,0.5)' : 'rgba(6,182,212,0.5)',
-          boxShadow: isWork
-            ? '0 0 12px rgba(99,102,241,0.3), 0 0 0 4px rgba(99,102,241,0.08)'
-            : '0 0 12px rgba(6,182,212,0.3), 0 0 0 4px rgba(6,182,212,0.08)',
+          borderColor: `rgba(${accentRgb},0.5)`,
+          boxShadow: `0 0 16px rgba(${accentRgb},0.3), 0 0 0 5px rgba(${accentRgb},0.06)`,
         }}
         aria-hidden="true"
       >
-        <Icon size={14} strokeWidth={2} style={{ color: isWork ? '#818cf8' : '#22d3ee' }} />
+        <Icon size={15} strokeWidth={2} style={{ color: accent }} />
       </div>
 
       {/* Card */}
-      <div ref={ref} className="exp-card" aria-label={`${entry.role} at ${entry.company}`}>
-        {/* Header row */}
-        <div className="exp-card-header">
-          <div className="exp-card-titles">
-            <h3 className="exp-role">{entry.role}</h3>
-            <p className="exp-company" style={{ color: isWork ? '#818cf8' : '#22d3ee' }}>
-              {entry.company}
-            </p>
-          </div>
-          <span
-            className="exp-period"
-            style={{
-              color: isWork ? '#818cf8' : '#22d3ee',
-              background: isWork ? 'rgba(99,102,241,0.08)' : 'rgba(6,182,212,0.08)',
-              borderColor: isWork ? 'rgba(99,102,241,0.18)' : 'rgba(6,182,212,0.18)',
-            }}
-          >
-            {entry.period}
-          </span>
+      <div
+        ref={ref}
+        className="exp-card"
+        aria-label={`${entry.role} at ${entry.company}`}
+        style={{
+          '--accent': accent,
+          '--accent-rgb': accentRgb,
+        } as React.CSSProperties}
+      >
+        {/* Gradient accent top bar */}
+        <div className="exp-card-accent" style={{
+          background: isWork
+            ? 'linear-gradient(90deg, #6366f1, #818cf8, #6366f1)'
+            : 'linear-gradient(90deg, #06b6d4, #22d3ee, #06b6d4)',
+        }} />
+
+        {/* Type badge */}
+        <div className="exp-type-badge" style={{
+          color: accent,
+          background: `rgba(${accentRgb},0.08)`,
+          borderColor: `rgba(${accentRgb},0.2)`,
+        }}>
+          <Icon size={11} strokeWidth={2.5} />
+          {isWork ? 'Work' : 'Education'}
         </div>
+
+        {/* Header */}
+        <div className="exp-card-header">
+          <h3 className="exp-role">{entry.role}</h3>
+          <div className="exp-meta">
+            <span className="exp-company" style={{ color: accent }}>
+              {entry.company}
+            </span>
+            <span className="exp-meta-sep" aria-hidden="true">·</span>
+            <span className="exp-period-inline">
+              <Calendar size={12} strokeWidth={2} aria-hidden="true" />
+              {entry.period}
+            </span>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="exp-divider" style={{
+          background: `linear-gradient(90deg, rgba(${accentRgb},0.2), rgba(${accentRgb},0.05))`,
+        }} />
 
         {/* Achievements */}
         <ul className="exp-achievements" role="list">
           {entry.achievements.map((ach, i) => (
             <li key={i} className="exp-ach-item">
-              <span
-                className="exp-ach-dot"
-                style={{ background: isWork ? '#6366f1' : '#06b6d4' }}
-                aria-hidden="true"
-              />
-              {ach}
+              <span className="exp-ach-icon" style={{ color: accent }}>
+                <ChevronRight size={13} strokeWidth={2.5} />
+              </span>
+              <span>{ach}</span>
             </li>
           ))}
         </ul>
@@ -177,6 +202,7 @@ export default function Experience() {
           font-family: var(--font-mono);
           color: #818cf8;
           margin-bottom: 0.5rem;
+          letter-spacing: 0.04em;
         }
         .exp-title {
           font-size: clamp(1.75rem, 5vw, 2.5rem);
@@ -208,7 +234,8 @@ export default function Experience() {
           top: 0;
           bottom: 0;
           width: 2px;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 1px;
         }
         @media (min-width: 768px) {
           .exp-line {
@@ -219,10 +246,10 @@ export default function Experience() {
         .exp-line-fill {
           width: 100%;
           height: 100%;
-          background: linear-gradient(180deg, #6366f1, #06b6d4);
+          background: linear-gradient(180deg, #6366f1 0%, #a78bfa 40%, #06b6d4 100%);
           transform-origin: top;
           transform: scaleY(0);
-          transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
           will-change: transform;
         }
 
@@ -232,123 +259,212 @@ export default function Experience() {
           display: flex;
           align-items: flex-start;
           gap: 1.25rem;
-          padding-left: 3rem;
+          padding-left: 3.25rem;
         }
         @media (min-width: 768px) {
           .exp-timeline-item {
             padding-left: 0;
-            justify-content: center;
           }
-          .exp-timeline-item:nth-child(odd) {
+          /* Even children = left-side cards (1st, 3rd entry — offset by .exp-line being child 1) */
+          .exp-timeline-item:nth-child(even) {
+            justify-content: flex-start;
             flex-direction: row-reverse;
+            padding-right: calc(50% + 2rem);
+          }
+          .exp-timeline-item:nth-child(even) .exp-card {
+            text-align: left;
+          }
+          .exp-timeline-item:nth-child(even) .exp-card-header {
+            align-items: flex-start;
+          }
+          .exp-timeline-item:nth-child(even) .exp-meta {
+            justify-content: flex-start;
+          }
+          .exp-timeline-item:nth-child(even) .exp-ach-item {
+            flex-direction: row;
+            text-align: left;
+          }
+          /* Odd children = right-side cards (2nd, 4th entry) — text left-aligned */
+          .exp-timeline-item:nth-child(odd) {
+            justify-content: flex-end;
+            padding-left: calc(50% + 2rem);
+          }
+          .exp-timeline-item:nth-child(odd) .exp-card {
+            text-align: left;
+          }
+          .exp-timeline-item:nth-child(odd) .exp-card-header {
+            align-items: flex-start;
+          }
+          .exp-timeline-item:nth-child(odd) .exp-meta {
+            justify-content: flex-start;
+          }
+          .exp-timeline-item:nth-child(odd) .exp-ach-item {
+            flex-direction: row;
+            text-align: left;
           }
         }
 
         /* ── Node (icon circle) ─────────────────────────── */
         .exp-node {
           position: absolute;
-          left: 8px;
-          top: 1.25rem;
-          width: 2.25rem;
-          height: 2.25rem;
+          left: 6px;
+          top: 1.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
           border-radius: 50%;
           border: 2px solid;
-          background: #0a0a0f;
+          background: #0a0a14;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 3;
           flex-shrink: 0;
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                      box-shadow 0.3s ease;
         }
-        .exp-timeline-item:hover .exp-node {
-          transform: scale(1.15);
+        @media (hover: hover) and (pointer: fine) {
+          .exp-timeline-item:hover .exp-node {
+            transform: scale(1.18);
+          }
         }
         @media (min-width: 768px) {
           .exp-node {
             left: 50%;
             transform: translateX(-50%);
           }
-          .exp-timeline-item:hover .exp-node {
-            transform: translateX(-50%) scale(1.15);
+          @media (hover: hover) and (pointer: fine) {
+            .exp-timeline-item:hover .exp-node {
+              transform: translateX(-50%) scale(1.18);
+            }
           }
         }
 
         /* ── Card ────────────────────────────────────────── */
         .exp-card {
+          position: relative;
           width: 100%;
-          padding: 1.25rem;
+          padding: 1.5rem;
+          padding-top: 2rem;
           border-radius: 1rem;
           background: rgba(255, 255, 255, 0.025);
           border: 1px solid rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          overflow: hidden;
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                       border-color 0.3s ease,
                       box-shadow 0.3s ease;
           will-change: transform;
         }
-        .exp-card:hover {
-          transform: translateY(-3px);
-          border-color: rgba(99, 102, 241, 0.18);
-          box-shadow: 0 16px 48px rgba(99, 102, 241, 0.1),
-                      0 0 0 1px rgba(99, 102, 241, 0.08);
+        @media (hover: hover) and (pointer: fine) {
+          .exp-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(var(--accent-rgb, 99,102,241), 0.25);
+            box-shadow: 0 20px 60px rgba(var(--accent-rgb, 99,102,241), 0.12),
+                        0 0 0 1px rgba(var(--accent-rgb, 99,102,241), 0.08),
+                        inset 0 1px 0 rgba(255,255,255,0.04);
+          }
+          .exp-card:hover .exp-ach-icon {
+            transform: translateX(2px);
+          }
         }
         @media (hover: none) {
-          .exp-card:hover { transform: none; box-shadow: none; }
           .exp-card:active {
-            border-color: rgba(99, 102, 241, 0.2);
+            border-color: rgba(var(--accent-rgb, 99,102,241), 0.25);
             transition-duration: 0.1s;
           }
         }
         @media (min-width: 768px) {
           .exp-card {
-            width: calc(50% - 2.75rem);
+            width: 100%;
           }
+        }
+
+        /* Gradient accent bar at top of card */
+        .exp-card-accent {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+        @media (hover: hover) and (pointer: fine) {
+          .exp-card:hover .exp-card-accent {
+            opacity: 1;
+          }
+        }
+
+        /* Type badge */
+        .exp-type-badge {
+          position: absolute;
+          top: 0.75rem;
+          left: 1rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          padding: 0.2rem 0.5rem;
+          border-radius: 9999px;
+          font-size: 0.625rem;
+          font-weight: 700;
+          font-family: var(--font-mono);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          border: 1px solid;
+          line-height: 1;
         }
 
         /* ── Card header ────────────────────────────────── */
         .exp-card-header {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-        @media (min-width: 480px) {
-          .exp-card-header {
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.75rem;
-          }
-        }
-        .exp-card-titles {
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-          min-width: 0;
+          gap: 0.375rem;
+          margin-bottom: 0.875rem;
+          margin-top: 0.5rem;
         }
         .exp-role {
-          font-size: 0.9375rem;
+          font-size: 1rem;
           font-weight: 700;
           color: #f1f5f9;
           line-height: 1.35;
-          letter-spacing: -0.01em;
+          letter-spacing: -0.015em;
+        }
+        @media (min-width: 640px) {
+          .exp-role {
+            font-size: 1.0625rem;
+          }
+        }
+        .exp-meta {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
         }
         .exp-company {
           font-size: 0.8125rem;
           font-weight: 600;
+          letter-spacing: 0.01em;
         }
-        .exp-period {
-          flex-shrink: 0;
-          align-self: flex-start;
-          padding: 0.25rem 0.625rem;
-          border-radius: 9999px;
-          font-size: 0.6875rem;
-          font-weight: 600;
+        .exp-meta-sep {
+          color: rgba(255,255,255,0.15);
+          font-size: 0.75rem;
+        }
+        .exp-period-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          font-size: 0.75rem;
           font-family: var(--font-mono);
-          border: 1px solid;
-          white-space: nowrap;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        /* Divider */
+        .exp-divider {
+          height: 1px;
+          margin-bottom: 0.875rem;
+          border-radius: 1px;
         }
 
         /* ── Achievements ───────────────────────────────── */
@@ -360,17 +476,31 @@ export default function Experience() {
         .exp-ach-item {
           display: flex;
           align-items: baseline;
-          gap: 0.625rem;
+          gap: 0.5rem;
           font-size: 0.8125rem;
           color: #94a3b8;
-          line-height: 1.6;
+          line-height: 1.65;
         }
-        .exp-ach-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
+        .exp-ach-icon {
+          display: flex;
+          align-items: center;
           flex-shrink: 0;
-          margin-top: 0.45rem;
+          margin-top: 0.2rem;
+          transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        /* ── Responsive card width tweak ────────────────── */
+        @media (max-width: 767px) {
+          .exp-type-badge {
+            position: relative;
+            top: auto;
+            left: auto;
+            margin-bottom: 0.5rem;
+            width: fit-content;
+          }
+          .exp-card {
+            padding-top: 1.25rem;
+          }
         }
       `}</style>
 

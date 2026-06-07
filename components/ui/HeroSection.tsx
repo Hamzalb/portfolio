@@ -286,7 +286,7 @@ export default function HeroSection() {
         /* ── Scroll indicator ───────────────────────────── */
         .hero-scroll-btn {
           position: absolute;
-          bottom: clamp(1.5rem, 4vw, 2.5rem);
+          bottom: 0.5rem;
           left: 0;
           right: 0;
           width: fit-content;
